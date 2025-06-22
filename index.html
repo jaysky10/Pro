@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#121212" />
+  <title>Jaysky Logbook</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #ffffff;
+      --box-color: #1e1e1e;
+      --accent: #00b4ff;
+    }
+    body.light {
+      --bg-color: #f9f9f9;
+      --text-color: #000;
+      --box-color: #fff;
+      --accent: #0077cc;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: var(--accent);
+    }
+    .section {
+      background: var(--box-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    label, input, button, select, textarea {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      font-size: 16px;
+    }
+    input, select, textarea {
+      padding: 8px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 6px;
+    }
+    body.light input, body.light select, body.light textarea {
+      background: #f0f0f0;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: var(--accent);
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .toggle-mode {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .entry-list {
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border-bottom: 1px solid #444;
+      padding: 8px;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-mode" onclick="toggleTheme()">Toggle Dark/Light</button>
+  <h1>Jaysky Logbook</h1>  <div class="section">
+    <h2>Shopee Tracker – Summary</h2>
+    <div id="shopeeSummary"></div>
+  </div>  <script>
+    const shopeeOrders = JSON.parse(localStorage.getItem("shopeeOrders") || "[]");
+
+    function renderShopeeSummary() {
+      const container = document.getElementById("shopeeSummary");
+      container.innerHTML = "";
+
+      if (!shopeeOrders.length) {
+        container.innerHTML = "<p>No Shopee orders yet.</p>";
+        return;
+      }
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Tracking Number</th>
+            <th>Amount (₱)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      let total = 0;
+      let pending = 0;
+
+      shopeeOrders.forEach(order => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${new Date(order.date).toDateString()}</td>
+          <td>${order.tracking}</td>
+          <td>${order.released ? order.amount.toFixed(2) : ""}</td>
+          <td>${order.released ? "✅ Released" : "⬜ Not Released"}</td>
+        `;
+        table.querySelector("tbody").appendChild(row);
+
+        if (order.released && !isNaN(order.amount)) {
+          total += order.amount;
+        } else if (!order.released) {
+          pending++;
+        }
+      });
+
+      container.appendChild(table);
+
+      const summary = document.createElement("div");
+      summary.innerHTML = `
+        <p><b>Total Payment Released:</b> ₱${total.toFixed(2)}</p>
+        <p><b>Pending Orders:</b> ${pending}</p>
+      `;
+      summary.style.marginTop = "10px";
+      container.appendChild(summary);
+    }
+
+    if (!shopeeOrders.length) {
+      const sample = [
+        { date: "2025-04-15", tracking: "250415B4P9FD4Y-751", released: true, amount: 751 },
+        { date: "2025-04-20", tracking: "250420R1CFDFJ6-197", released: true, amount: 197 },
+        { date: "2025-04-20", tracking: "250420RSAHM5E1-99", released: true, amount: 99 },
+        { date: "2025-04-28", tracking: "250428DRRNGRHW-98", released: false, amount: 0 },
+      ];
+      localStorage.setItem("shopeeOrders", JSON.stringify(sample));
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light');
+
+    renderShopeeSummary();
+  </script></body>
+</html>
